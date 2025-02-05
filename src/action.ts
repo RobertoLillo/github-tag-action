@@ -123,24 +123,17 @@ export default async function main() {
 
     commits = await getCommits(previousTag.commit.sha, commitRef);
 
-    let bump = await analyzeCommits(
-      {
-        releaseRules: mappedReleaseRules
-          ? // analyzeCommits doesn't appreciate rules with a section /shrug
-            mappedReleaseRules.map(({ section, ...rest }) => ({ ...rest }))
-          : undefined,
-      },
-      { commits, logger: { log: console.info.bind(console) } }
-    );
+    let bump: ReleaseType = 'patch';
+    core.info('Always using patch bump regardless of commit messages');
 
     // Determine if we should continue with tag creation based on main vs prerelease branch
     let shouldContinue = true;
     if (isPrerelease) {
-      if (!bump && defaultPreReleaseBump === 'false') {
+      if (defaultPreReleaseBump === 'false') {
         shouldContinue = false;
       }
     } else {
-      if (!bump && defaultBump === 'false') {
+      if (defaultBump === 'false') {
         shouldContinue = false;
       }
     }
