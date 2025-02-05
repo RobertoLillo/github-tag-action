@@ -123,8 +123,10 @@ export default async function main() {
 
     commits = await getCommits(previousTag.commit.sha, commitRef);
 
-    let bump: ReleaseType = 'patch';
-    core.info('Always using patch bump regardless of commit messages');
+    // Always use patch, no exceptions
+    const releaseType: ReleaseType = isPrerelease ? 'prepatch' : 'patch';
+    core.info('Always using patch bump regardless of commit messages or branch type');
+    core.setOutput('release_type', releaseType);
 
     // Determine if we should continue with tag creation based on main vs prerelease branch
     let shouldContinue = true;
@@ -145,22 +147,6 @@ export default async function main() {
       );
       return;
     }
-
-    // If we don't have an automatic bump for the prerelease, just set our bump as the default
-    if (isPrerelease && !bump) {
-      bump = defaultPreReleaseBump;
-    }
-
-    // If somebody uses custom release rules on a prerelease branch they might create a 'preprepatch' bump.
-    const preReg = /^pre/;
-    if (isPrerelease && preReg.test(bump)) {
-      bump = bump.replace(preReg, '');
-    }
-
-    const releaseType: ReleaseType = isPrerelease
-      ? `pre${bump}`
-      : bump || defaultBump;
-    core.setOutput('release_type', releaseType);
 
     const incrementedVersion = inc(previousVersion, releaseType, identifier);
 
