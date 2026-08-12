@@ -1,0 +1,27 @@
+name: 1 · CI · Test
+
+# Única etapa del repo: esto es una action, no un servicio, así que no hay CD ni
+# reusable de entrega de gitops que aplique. Se publica por tag/release, no desde
+# un workflow.
+#
+# checkout y setup-node van por los wrappers de gitops, que fijan la versión de
+# la action a nivel de org, y el runner sale de vars.DEFAULT_RUNNER.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ${{ vars.DEFAULT_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: Engenis-Ltda/gitops/.github/actions/checkout@main
+      - uses: Engenis-Ltda/gitops/.github/actions/setup-node@main
+        with:
+          node-version-file: package.json
+      - run: npm ci
+      - run: npm run test
+      - run: npm run check
+      - run: npm run build
